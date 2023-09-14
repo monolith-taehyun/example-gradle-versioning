@@ -12,4 +12,10 @@ public class HelloController {
         String message = "Hello " + name;
         return ResponseEntity.ok(message);
     }
+
+    @GetMapping("hi")
+    public ResponseEntity hi(String name) {
+        String message = "Hi " + name;
+        return ResponseEntity.ok(message);
+    }
 }
