@@ -39,10 +39,11 @@ jobs:
           git show-ref
           echo "===="
           git checkout main
-          git --no-pager branch
 
       - name: Build and Generate Changelog
         run: |
+          git --no-pager branch
+          git describe --abbrev=0 --tags HEAD^
           ./gradlew generateChangelog
 
       - name: Commit and Push Changelog
