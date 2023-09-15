@@ -18,4 +18,10 @@ public class HelloController {
         String message = "Hi " + name;
         return ResponseEntity.ok(message);
     }
+
+    @GetMapping("greeting")
+    public ResponseEntity greeting(String name) {
+        String message = "Greeting  " + name;
+        return ResponseEntity.ok(message);
+    }
 }
