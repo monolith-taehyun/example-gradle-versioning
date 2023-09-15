@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.example'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.2'
 
 java {
     sourceCompatibility = '17'
@@ -27,18 +27,43 @@ tasks.named('test') {
 
 task generateChangelog {
     doLast {
-        // changelog 파일을 생성할 위치를 지정합니다.
         def changelogFile = new File('CHANGELOG.md')
 
-        // git commit 메시지를 읽어옵니다.
-        def commitLog = 'git log --oneline --decorate --reverse'.execute().text.split('\n')
+        // 현재 Git 태그를 사용하여 버전 가져오기 (예: v1.2.3)
+        def currentVersion = 'v' + project.version.toString()
 
-        // changelog 파일에 내용을 작성합니다.
-        changelogFile.write('### 최신 버전 (날짜)')
-        commitLog.each {
-            def commit = it.split(' ')[0]
-            def message = it.split(' ')[1]
-            changelogFile.append('\n* ' + message)
+        // 이전 버전 가져오기 (가장 최근 태그 이전)
+        def previousVersion = getPreviousVersion()
+        println previousVersion
+
+        // Git log 명령 실행하여 변경 로그 생성
+        def changeLogContent = getChangeLogContent(previousVersion, currentVersion)
+        println changeLogContent
+
+        // Changelog 파일에 내용 작성
+        def existingContent = file(changelogFile).text
+        changelogFile.text = "## " + currentVersion + getCurrentDate() + "\n";
+
+        for (changeLogEntry in changeLogContent) {
+            changelogFile.append('\n- ' + changeLogEntry.replaceAll(/^'|'$/, ""))
         }
+
+        changelogFile.append("\n\n" + existingContent)
     }
+}
+
+def getPreviousVersion() {
+    return 'git describe --abbrev=0 --tags HEAD^'.execute().text.trim()
+}
+
+def getChangeLogContent(previousVersion, currentVersion) {
+    def gitLogCommand = "git --no-pager log --pretty=format:'%s' ${previousVersion}.."
+    def process = gitLogCommand.execute()
+    def output = new StringBuilder()
+    process.waitForProcessOutput(output, System.err)
+    return output.toString().trim().split('\n')
+}
+
+def getCurrentDate() {
+    return new Date().format(" (yyyy-MM-dd)")
 }
