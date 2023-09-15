@@ -1,7 +1,7 @@
 name: Release Workflow
 
 on:
-  release$$:
+  release:
     types:
       - created
 
