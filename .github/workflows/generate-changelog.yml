@@ -41,7 +41,7 @@ jobs:
           path: CHANGELOG.md
           write-mode: overwrite
           contents: |
-            steps.changelog.outputs
+            ${{ steps.changelog.outputs }}
 
       - name: Commit & Push changes
         uses: actions-js/push@master
