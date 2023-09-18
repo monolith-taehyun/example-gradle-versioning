@@ -3,7 +3,7 @@ name: Release Workflow
 on:
   release:
     types:
-      - prereleased
+      - created
 
 jobs:
   build:
