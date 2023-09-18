@@ -38,7 +38,7 @@ jobs:
       - name: Extract Gradle Version
         id: gradle_version
         run: |
-          version=$(grep -oP 'version\s+\K[0-9]+\.[0-9]+\.[0-9]+' build.gradle)
+          version=$(awk -F"'" '/version =/ {print $2}' build.gradle)
           echo "::set-output name=gradle_version::$version"
 
       - name: Display Gradle Version
