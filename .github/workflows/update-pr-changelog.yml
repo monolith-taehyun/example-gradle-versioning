@@ -9,50 +9,87 @@ on:
 
 jobs:
   build:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check PR number
-        id: pr_number
-        run: echo "GITHUB_PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
-
-      - name: Print PR number
-        run: echo "PR number is $GITHUB_PR_NUMBER"
-
-      - name: Checkout Repository
+      - name: Source checkout
         uses: actions/checkout@v3
-        with:
-          persist-credentials: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
 
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
+#      - name: Set up JDK
+#        uses: actions/setup-java@v3
+#        with:
+#          java-version: '17'
+#          distribution: 'temurin'
+#          cache: gradle
+#
+#      - name: Validate Gradle wrapper
+#        uses: gradle/wrapper-validation-action@v1
+#
+#      - name: Setup Gradle
+#        uses: gradle/gradle-build-action@v2
+#
+#      - name: Execute Gradle build
+#        env:
+#          PACKAGES_USERNAME: ${{ secrets.PACKAGES_USERNAME }}
+#          PACKAGES_PASSWORD: ${{ secrets.PACKAGES_PASSWORD }}
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: ./gradlew publish
 
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1
+      - name: Extract Gradle Version
+        id: gradle_version
+        run: |
+          version=$(grep -oP 'version\s+\K[0-9]+\.[0-9]+\.[0-9]+' build.gradle)
+          echo "::set-output name=gradle_version::$version"
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+      - name: Display Gradle Version
+        run: |
+          echo "Gradle version is ${{ steps.gradle_version.outputs.gradle_version }}"
 
-      - name: Create changelog
-        id: changelog
-        uses: monolith-taehyun/github-action-pr-changelog@main
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{ steps.gradle_version.outputs.gradle_version }}
 
-      - name: Replace changelog file
-        uses: DamianReeves/write-file-action@master
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
         with:
-          path: CHANGELOG.md
-          write-mode: overwrite
-          contents: |
-            ${{ steps.changelog.outputs.changelog }}
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
 
-      - name: Commit & Push changes
-        uses: actions-js/push@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+#jobs:
+#  build:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Check PR number
+#        id: pr_number
+#        run: echo "GITHUB_PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+#
+#      - name: Checkout Repository
+#        uses: actions/checkout@v3
+#        with:
+#          persist-credentials: ${{ secrets.GITHUB_TOKEN }}
+#          fetch-depth: 0
+#
+#      - name: Create changelog
+#        id: changelog
+#        uses: monolith-taehyun/github-action-pr-changelog@main
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Replace changelog file
+#        uses: DamianReeves/write-file-action@master
+#        with:
+#          path: CHANGELOG.md
+#          write-mode: overwrite
+#          contents: |
+#            ${{ steps.changelog.outputs.changelog }}
+#
+#      - name: Commit & Push changes
+#        uses: actions-js/push@master
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
