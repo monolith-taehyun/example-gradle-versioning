@@ -12,6 +12,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check PR number
+        id: pr_number
+        run: echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_PR_NUMBER
+
+      - name: Print PR number
+        run: echo "PR number is $GITHUB_PR_NUMBER"
+
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
@@ -33,7 +40,7 @@ jobs:
 
       - name: Create changelog
         id: changelog
-        uses: dragonraid/changelog-emitter@v0.3.1
+        uses: monolith-taehyun/github-action-pr-changelog@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
