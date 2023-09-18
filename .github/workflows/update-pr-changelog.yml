@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Check PR number
         id: pr_number
-        run: echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_PR_NUMBER
+        run: echo "GITHUB_PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
 
       - name: Print PR number
         run: echo "PR number is $GITHUB_PR_NUMBER"
