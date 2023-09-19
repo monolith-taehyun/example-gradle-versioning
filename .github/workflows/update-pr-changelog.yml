@@ -59,6 +59,32 @@ jobs:
           name: Release ${{ steps.tag_version.outputs.new_tag }}
           body: ${{ steps.tag_version.outputs.changelog }}
 
+      - name: Increment Patch Version
+        id: increment_patch_version
+        run: |
+          current_version=${{ steps.tag_version.outputs.new_tag }}
+          IFS='.' read -ra version_parts <<< "$current_version"
+          ((version_parts[3]++))
+          modified_version="${version_parts[1]}.${version_parts[2]}.${version_parts[3]}-SNAPSHOT"
+          echo "::set-output name=next_version::${modified_version}"
+
+      - name: Display Modified Version
+        run: |
+          next_version=${{ steps.increment_patch_version.outputs.next_version }}
+          echo "Modified Version: $next_version"
+
+      - name: Replace changelog file
+        uses: DamianReeves/write-file-action@master
+        with:
+          path: version.txt
+          write-mode: overwrite
+          contents: |
+            ${{ steps.increment_patch_version.outputs.next_version }}
+
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
 #jobs:
 #  build:
